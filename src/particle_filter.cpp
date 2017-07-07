@@ -20,7 +20,7 @@
 using namespace std;
 
 void ParticleFilter::init(double x, double y, double theta, double std[]) {
-	
+
 	num_particles = 500; // number of particles
 
 	// initialise all the particles with start position and weights to 1
@@ -44,37 +44,33 @@ void ParticleFilter::prediction(double delta_t, double std_pos[], double velocit
 	//  http://en.cppreference.com/w/cpp/numeric/random/normal_distribution
 	//  http://www.cplusplus.com/reference/random/default_random_engine/
 
-	default_random_engine gen;
-	//normal (Gaussian) distribution for x, y, and psi.
+	default_random_engine rand_gen; // random generator
+	//normal distributions for x, y, and psi.
 	normal_distribution<double> dist_x(0, std_pos[0]);
 	normal_distribution<double> dist_y(0,std_pos[1]);
 	normal_distribution<double> dist_theta(0,std_pos[2]);
-	//for each particle
-	for (int i = 0; i < num_particles; ++i) {
-		////////////////////////////////////////////////////
-		// Propogate position based on velocity and yaw_rate
-		////////////////////////////////////////////////////
-		//avoid division by zero when integrating state. chose correct integration formula
 
-		if (yaw_rate < 0.0001) {
+	//for each particle
+	for (int i = 0; i < num_particles; ++i)
+	{
+		// if yaw rate is small
+		if (yaw_rate < 0.0001)
+		{
 			particles[i].x = particles[i].x + velocity * cos(particles[i].theta) * delta_t;
 			particles[i].y = particles[i].y + velocity * sin(particles[i].theta) * delta_t;
-		} else {
-			particles[i].x = particles[i].x + velocity / yaw_rate *
-											  (sin(particles[i].theta + yaw_rate * delta_t) - sin(particles[i].theta));
-			particles[i].y = particles[i].y + velocity / yaw_rate *
-											  (-cos(particles[i].theta + yaw_rate * delta_t) + cos(particles[i].theta));
 		}
-		//third state has no divide by zero worries
+		else
+		{
+			particles[i].x = particles[i].x + velocity / yaw_rate * (sin(particles[i].theta + yaw_rate * delta_t) - sin(particles[i].theta));
+			particles[i].y = particles[i].y + velocity / yaw_rate * (-cos(particles[i].theta + yaw_rate * delta_t) + cos(particles[i].theta));
+		}
+
 		particles[i].theta = particles[i].theta + yaw_rate * delta_t;
 
-
-		/////////////////////////////////
-		//Add gaussian noise to particle:
-		/////////////////////////////////
-		particles[i].x += dist_x(gen);
-		particles[i].y += dist_y(gen);
-		particles[i].theta += dist_theta(gen);
+		// add noise to particle
+		particles[i].x += dist_x(rand_gen);
+		particles[i].y += dist_y(rand_gen);
+		particles[i].theta += dist_theta(rand_gen);
 	}
 
 }
@@ -169,29 +165,18 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
 		else{
 			particles[i].weight = 0;
 		}
-
-
-
-
-
-
-
 	}
 
 	//now normalize
 	double scale_factor = 0.0;
 	for (int i = 0; i < num_particles; i++){
 		scale_factor+=particles[i].weight;
-
 	}
 	// cout << scale_factor << endl;
 	for(int i = 0; i < num_particles; i++){
 		particles[i].weight = particles[i].weight/scale_factor;
 		weights[i] = particles[i].weight;
 	}
-
-
-
 }
 
 void ParticleFilter::resample() {
