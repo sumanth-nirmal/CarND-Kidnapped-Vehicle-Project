@@ -168,10 +168,11 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
 	for (int i = 0; i < num_particles; i++){
 		scale_factor+=particles[i].weight;
 	}
-	// cout << scale_factor << endl;
-	for(int i = 0; i < num_particles; i++){
-		particles[i].weight = particles[i].weight/scale_factor;
-		weights[i] = particles[i].weight;
+
+	// update weights
+	for(int i = 0; i < num_particles; i++)
+	{
+		weights[i] = particles[i].weight/scale_factor;
 	}
 }
 
